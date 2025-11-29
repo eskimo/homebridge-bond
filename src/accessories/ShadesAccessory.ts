@@ -13,13 +13,16 @@ export class ShadesAccessory implements BondAccessory  {
   windowCoveringService: WindowCoveringService
   presetService?: ButtonService
   toggleStateService?: ButtonService
+  inverted: boolean
 
   constructor(
     platform: BondPlatform,
     accessory: PlatformAccessory,
-    bond: Bond) {
+    bond: Bond,
+    inverted: boolean) {
     this.platform = platform;
     this.accessory = accessory;
+    this.inverted = inverted;
     const device: Device = accessory.context.device;
 
     this.windowCoveringService = new WindowCoveringService(platform, accessory);
@@ -38,15 +41,16 @@ export class ShadesAccessory implements BondAccessory  {
 
   updateState(state: BondState) {
     if (this.windowCoveringService) {
-      // If position is available, use it, otherwise fall back to open state
       if (state.position !== undefined) {
-        // Convert Bond's extended percentage (0=open, 100=closed) to HomeKit's open percentage (0=closed, 100=open)
-        const homekitPosition = 100 - state.position;
+        const homekitPosition = this.inverted ? state.position : 100 - state.position;
         this.windowCoveringService.currentPosition.updateValue(homekitPosition);
         this.windowCoveringService.targetPosition.updateValue(homekitPosition);
       } else {
-        this.windowCoveringService.currentPosition.updateValue(state.open === 1 ? 100 : 0);
-        this.windowCoveringService.targetPosition.updateValue(state.open === 1 ? 100 : 0);
+        const homekitPosition = this.inverted
+          ? (state.open === 1 ? 0 : 100)
+          : (state.open === 1 ? 100 : 0);
+        this.windowCoveringService.currentPosition.updateValue(homekitPosition);
+        this.windowCoveringService.targetPosition.updateValue(homekitPosition);
       }
     }
   }
@@ -79,8 +83,7 @@ export class ShadesAccessory implements BondAccessory  {
 
     Observer.set(this.windowCoveringService.targetPosition, (value, callback) => {
       if (Device.MShasPosition(device)) {
-        // Convert HomeKit's open percentage (0=closed, 100=open) to Bond's extended percentage (0=open, 100=closed)
-        const bondPosition = 100 - (value as number);
+        const bondPosition = this.inverted ? (value as number) : 100 - (value as number);
         bond.api.setPosition(device, bondPosition, callback)
           .then(() => {
             this.platform.debug(this.accessory, `Set position: ${bondPosition} (HomeKit: ${value})`);
@@ -89,7 +92,6 @@ export class ShadesAccessory implements BondAccessory  {
             this.platform.error(this.accessory, `Error setting position: ${error}`);
           });
       } else {
-        // Otherwise, toggle open/closed based on target position
         bond.api.toggleOpen(device, callback)
           .then(() => {
             this.platform.debug(this.accessory, `Toggled open: ${value}`);

@@ -13,6 +13,7 @@ export class BondPlatform implements DynamicPlatformPlugin {
 
   private accessories: PlatformAccessory[] = [];
   private bonds: Bond[] | undefined;
+  invertShadeIds: string[] = [];
 
   constructor(
     public log: Logging,
@@ -30,6 +31,9 @@ export class BondPlatform implements DynamicPlatformPlugin {
     }
     
     this.log.debug(`Config: ${JSON.stringify(config, null, 2)}`);
+
+    let castConfig = this.config as BondPlatformConfig;
+    this.invertShadeIds = castConfig.invert_shade_ids || [];
 
     api.on('didFinishLaunching', () => {
       // Delaying the initialization of bonds property because we need to

@@ -44,8 +44,10 @@ export namespace BondAccessory {
         return new GenericAccessory(platform, accessory, bond);
       case DeviceType.Fireplace: 
         return new FireplaceAccessory(platform, accessory, bond);
-      case DeviceType.Shades:
-        return new ShadesAccessory(platform, accessory, bond);
+      case DeviceType.Shades: {
+        let inverted = platform.invertShadeIds.includes(device.id);
+        return new ShadesAccessory(platform, accessory, bond, inverted);
+      }
       case DeviceType.Light:
         return new LightAccessory(platform, accessory, bond);
       default: {

@@ -67,6 +67,15 @@
         "default": false,
         "required": false,
         "description": "Use fan speed values instead of percentages (i.e. Hey Siri set the Office Fan to 2)."
+      },
+      "invert_shade_ids": {
+        "title": "Invert shades (device IDs)",
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "default": [],
+        "description": "List of Bond device IDs for shades/awnings where extended should be treated as open (invert HomeKit open/close semantics)."
       }
     }
   }

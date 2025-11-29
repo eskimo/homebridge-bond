@@ -13,6 +13,7 @@ export interface BondPlatformConfig extends PlatformConfig {
   include_dimmer?: boolean;
   fan_speed_values?: boolean;
   include_toggle_state?: boolean;
+  invert_shade_ids?: string[];
 }
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
@@ -38,10 +39,23 @@ export namespace BondPlatformConfig {
       return false;
     }
 
+    let validInvertShadeIds = true;
+
+    if (cast.invert_shade_ids !== undefined) {
+      if (!Array.isArray(cast.invert_shade_ids)) {
+        platform.log.error(`invert_shade_ids has invalid value: ${cast.invert_shade_ids}. Expected array of strings.`);
+        validInvertShadeIds = false;
+      } else if (!cast.invert_shade_ids.every(id => typeof id === "string")) {
+        platform.log.error("invert_shade_ids contains non-string values.");
+        validInvertShadeIds = false;
+      }
+    }
+
     const bondsValid = cast.bonds.map(bond => {
       return BondConfig.isValid(platform, bond);
     }).every(v => v === true);
-    return validDimmer && validFanSpeed && validToggleState && bondsValid;
+  
+    return validDimmer && validFanSpeed && validToggleState && validInvertShadeIds && bondsValid;
   }
 }
 
